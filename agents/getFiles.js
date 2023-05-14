@@ -12,8 +12,9 @@ const promptTemplate =
 
 # Your Role
 ## This is your role
-Identify the files needed for the user input. Don't include new files. Also explain why the file was selected.
-Take into consideration that "user inputs" can be questions, code changes, reports of bugs or others. Reply accordingly.
+Identify what files we should consult/read for the user input/request.
+Reply only with files that exist in the current project. Also explain why each file was selected.
+Take into consideration that "user inputs" can be questions, code changes, reports of bugs or others.
 
 {format_instructions}
 

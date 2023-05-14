@@ -12,17 +12,16 @@ function formatSolutions(solutions) {
 const promptTemplate = 
 ` 
 # YOUR ROLE
-Based on Solutions below, write an answer to send to the user. Include:
+Based on the "File-Level Summary" section below, write an answer to send to the user. Include:
 - Your reasoning to the solution
-- File paths and functions/variable names
-- All necessary code snippets
-- Problems in your solution
+- File paths and functions/variable names (optional)
+- All necessary code snippets (optional)
 
 # User input
 ## Original user input/request
 {task}
 
-# Solutions
+# File-Level Summary
 ## This is an analysis of the relevant files in the project
 {analysis}
 ` 

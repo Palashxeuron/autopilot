@@ -12,7 +12,7 @@ function formatRelevantFiles(relevantFiles) {
 const promptTemplate = 
 ` 
 # YOUR ROLE
-Explain how to solve the task. A person will read your output and act based on your suggestions.
+Explain how to solve the task.
 Take into consideration that user inputs can be questions, code changes, reports of bugs or others. Reply accordingly.
 Another agent will look into the other files, your answer should focus on this file only. If there's nothing important to do on this file, keep your answer short or skip it.
 
@@ -26,7 +26,7 @@ Another agent will look into the other files, your answer should focus on this f
 
 # Source code of this file
 ### {path}
-\`\`\`
+\`\`\`language
 {code}
 \`\`\`
 ` 
