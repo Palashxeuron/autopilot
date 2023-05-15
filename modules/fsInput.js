@@ -3,6 +3,7 @@ const path = require('path');
 require('dotenv').config();
 const hashFile = require('./hashing');
 const { countTokens } = require('./tokenHelper');
+const { isBinaryFileSync } = require("isbinaryfile");
 
 const ignoreList = process.env.IGNORE_LIST.split(',');
 const fileExtensionsToProcess = process.env.FILE_EXTENSIONS_TO_PROCESS.split(',');
@@ -81,16 +82,16 @@ function loadFiles(dir) {
   
     for (const filePath of filePaths) {
         const fileContent = fs.readFileSync(filePath, 'utf-8');
-        if (!fileContent || fileContent.length == 0) {
-            continue;
+        if (!fileContent || fileContent.length == 0 || isBinaryFileSync(filePath)) {
+          continue;
         }
+
         const file = parseFileContent(dir, filePath, fileContent);
         files.push(file);
     }
   
     return files;
 };
-
 
 /**
  * Takes an array of file objects, each with a path property, and returns an array of file objects,

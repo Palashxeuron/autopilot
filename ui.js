@@ -87,16 +87,19 @@ async function main(task, test=false, suggestionMode) {
   }, []);
 
   console.log(`${chalk.yellow(uniqueRelevantFiles.length)} relevant files were identified by the agent:`);
-  const existingUniqueRelevantFiles = uniqueRelevantFiles.filter(file => {
+  const existingUniqueRelevantFiles = uniqueRelevantFiles.map(file => {
     filePathFull = path.posix.join(codeBaseDirectory, file.path);
     fileFound = fs.existsSync(filePathFull);
     if (!fileFound) {
       console.log(`${chalk.red(file.path)}: ${file.reason}`);
     }
-    return fileFound;
+    return file;
   });
   
-  const fileReasons = existingUniqueRelevantFiles.map(file => `${chalk.yellow(file.path)}: ${file.reason}`).join('\n');
+  const fileReasons = existingUniqueRelevantFiles.map(file => 
+    `${chalk.yellow(file.path)} 
+    Reason: ${file.reason} 
+    Task: ${file.task}`).join('\n');
   console.log(fileReasons+'\n');
 
   // Fetch code files the agent has deemed relevant
@@ -109,11 +112,12 @@ async function main(task, test=false, suggestionMode) {
     const fileReasons = existingUniqueRelevantFiles.map(file => `${chalk.yellow(file.path)}: ${file.reason}`).join('\n');
     console.log(fileReasons);
     console.log(`Codebase directory: ${codeBaseDirectory}`)
-    process.exit(1);
+    // process.exit(1);
   }
   if (files.length == 0) {
     console.log(chalk.red(`The agent has not identified any relevant files for the task: ${task}.\nPlease try again with a different task.`));
-    process.exit(1);
+    return
+    // process.exit(1);
   }
 
   let solutions = [];
