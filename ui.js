@@ -150,12 +150,12 @@ async function main(task, test=false, suggestionMode) {
 
   // Call final advisor agent to product final answer based on solutions
   if (suggestionMode) {
-
+    // Skip final Advisor if only 1 solution/file
     if (solutions.length > 1) {
       const finalAdvice = await runAgent(finalAdvisor, task, {solutions}, interactive);
       return { solution: finalAdvice, tokensUsage: tokensUsage() }
     } else {
-      return { solution: solutions[0], tokensUsage: tokensUsage()}
+      return { solution: solutions[0].code, tokensUsage: tokensUsage()}
     }
   }
   

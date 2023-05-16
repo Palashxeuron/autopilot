@@ -27,37 +27,46 @@ const callGPT = async (prompt, model) => {
   if (!verifyModel(model)) {
     throw new Error('Invalid model');
   }
+  let retries = 1;
+  while (retries >= 0) {
 
   console.log("Calling GPT. Model: ", model)
   saveLog(`Model: ${model}\nPrompt:\n${prompt}`)
-  try {
-    const completion = await openai.createChatCompletion({
-      model: model,
-      messages: [{role: "user", content: prompt}],
-      temperature: parseFloat(process.env.MODEL_TEMPERATURE),
-      presence_penalty: parseFloat(process.env.MODEL_PRESENCE_PENALTY),
-      frequency_penalty: parseFloat(process.env.MODEL_FREQUENCY_PENALTY),
-      user: process.env.MODEL_USER,
-    });
 
-    const usage = completion.data.usage
+    try {
+      const completion = await openai.createChatCompletion({
+        model: model,
+        messages: [{role: "user", content: prompt}],
+        temperature: parseFloat(process.env.MODEL_TEMPERATURE),
+        presence_penalty: parseFloat(process.env.MODEL_PRESENCE_PENALTY),
+        frequency_penalty: parseFloat(process.env.MODEL_FREQUENCY_PENALTY),
+        user: process.env.MODEL_USER,
+      });
 
-    // log usage
-    totalTokensUsed += usage.total_tokens; // increment total tokens used
-    completionTokens += usage.completion_tokens || 0
-    promptTokens += usage.prompt_tokens || 0
-    cost = calculateTokensCost(model, promptTokens, completionTokens, totalTokensUsed)
-    console.log(`Total tokens used: ${chalk.yellow(totalTokensUsed)}`, `Total Cost: ${chalk.yellow(cost.toFixed(2))}$`) // log total tokens used
+      const usage = completion.data.usage
 
-    const reply = completion.data.choices[0].message.content
-    saveLog("Reply:\n" + reply)
-    // return output
-    return reply
+      // log usage
+      totalTokensUsed += usage.total_tokens; // increment total tokens used
+      completionTokens += usage.completion_tokens || 0
+      promptTokens += usage.prompt_tokens || 0
+      cost = calculateTokensCost(model, promptTokens, completionTokens, totalTokensUsed)
+      console.log(`Total tokens used: ${chalk.yellow(totalTokensUsed)}`, `Total Cost: ${chalk.yellow(cost.toFixed(2))}$`) // log total tokens used
 
-  } catch (error) {
-    console.log(error.response)
+      const reply = completion.data.choices[0].message.content
+      saveLog("Reply:\n" + reply)
+      // return output
+      return reply
+
+    } catch (error) {
+      console.log(error.response)
+      if (retries === 0) {
+        throw error;
+      }
+      retries--;
+    }
   }
 };
+
 
 function calculateTokensCost(model, promptTokens, completionTokens, totalTokensUsed) {
   if (model === "gpt-4") {
