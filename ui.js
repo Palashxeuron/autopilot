@@ -88,22 +88,25 @@ async function main(task, test=false, suggestionMode) {
 
   console.log(`${chalk.yellow(uniqueRelevantFiles.length)} relevant files were identified by the agent:`);
   const existingUniqueRelevantFiles = uniqueRelevantFiles.map(file => {
-    filePathFull = path.posix.join(codeBaseDirectory, file.path);
-    fileFound = fs.existsSync(filePathFull);
-    if (!fileFound) {
-      console.log(`${chalk.red(file.path)}: ${file.reason}`);
-    }
     return file;
   });
   
-  const fileReasons = existingUniqueRelevantFiles.map(file => 
-    `${chalk.yellow(file.path)} 
-    Reason: ${file.reason} 
-    Task: ${file.task}`).join('\n');
-  console.log(fileReasons+'\n');
+  const filesFound = existingUniqueRelevantFiles.map(file => {
+    const filePathFull = path.posix.join(codeBaseDirectory, file.path);
+    const fileFound = fs.existsSync(filePathFull);
+
+    return {
+      File: file.path,
+      Reason: file.reason,
+      Task: file.task,
+      Exists: fileFound,
+    }
+  })
+
+  console.log(filesFound);
 
   // Fetch code files the agent has deemed relevant
-  let files;
+  let files = []
   try {
     files = getFiles(codeBaseDirectory, existingUniqueRelevantFiles);
   } catch (err) {
@@ -147,8 +150,13 @@ async function main(task, test=false, suggestionMode) {
 
   // Call final advisor agent to product final answer based on solutions
   if (suggestionMode) {
-    const finalAdvice = await runAgent(finalAdvisor, task, {solutions}, interactive);
-    return { solution: finalAdvice, tokensUsage: tokensUsage() }
+
+    if (solutions.length > 1) {
+      const finalAdvice = await runAgent(finalAdvisor, task, {solutions}, interactive);
+      return { solution: finalAdvice, tokensUsage: tokensUsage() }
+    } else {
+      return { solution: solutions[0], tokensUsage: tokensUsage()}
+    }
   }
   
   

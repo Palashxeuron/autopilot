@@ -103,14 +103,17 @@ function loadFiles(dir) {
 function getFiles(codeBaseDirectory, files){
 	let retFiles=[]
 	for (const file of files) {
-	  const filePathRelative = file.path;
-	  const filePathFull = path.posix.join(codeBaseDirectory, filePathRelative); 
+
 		let fileContent
-		if (file.exists) {
+		const filePathFull = path.posix.join(codeBaseDirectory, file.path); 
+		const fileFound = fs.existsSync(filePathFull);
+
+		if (fileFound) {
 			fileContent = fs.readFileSync(filePathFull, 'utf8');
 		} else {
 			fileContent = "// This is a new file"
 		}
+
 	  file.code = fileContent
 	  retFiles.push(file)
 	}
