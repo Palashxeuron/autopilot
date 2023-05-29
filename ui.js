@@ -153,7 +153,7 @@ async function main(task, test=false, suggestionMode) {
     // Skip final Advisor if only 1 solution/file
     if (solutions.length > 1) {
       const finalAdvice = await runAgent(finalAdvisor, task, {solutions}, interactive);
-      return { solution: finalAdvice, tokensUsage: tokensUsage() }
+      return { solution: finalAdvice, tokensUsage: tokensUsage(), previousSolutions: solutions }
     } else {
       return { solution: solutions[0].code, tokensUsage: tokensUsage()}
     }

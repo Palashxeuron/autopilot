@@ -27,10 +27,10 @@ const callGPT = async (prompt, model) => {
   if (!verifyModel(model)) {
     throw new Error('Invalid model');
   }
-  let retries = 1;
-  while (retries >= 0) {
+  let retries = 2;
+  while (retries > 0) {
 
-  console.log("Calling GPT. Model: ", model)
+  console.log(chalk.green("Calling GPT. Model: "), model)
   saveLog(`Model: ${model}\nPrompt:\n${prompt}`)
 
     try {
@@ -50,7 +50,7 @@ const callGPT = async (prompt, model) => {
       completionTokens += usage.completion_tokens || 0
       promptTokens += usage.prompt_tokens || 0
       cost = calculateTokensCost(model, promptTokens, completionTokens, totalTokensUsed)
-      console.log(`Total tokens used: ${chalk.yellow(totalTokensUsed)}`, `Total Cost: ${chalk.yellow(cost.toFixed(2))}$`) // log total tokens used
+      console.log(`Total tokens used: ${chalk.green(totalTokensUsed)}`, `Total Cost: ${chalk.green(cost.toFixed(2))}$`) // log total tokens used
 
       const reply = completion.data.choices[0].message.content
       saveLog("Reply:\n" + reply)
@@ -58,11 +58,16 @@ const callGPT = async (prompt, model) => {
       return reply
 
     } catch (error) {
-      console.log(error.response)
-      if (retries === 0) {
-        throw error;
+      // Retry logic
+      if (retries === 1) {
+        console.log(chalk.bgRed("Can't get response from OpenAI. Even after retries"), error.response.data)
+        return "OpenAI's API is not working at the moment 😓. Please try later."
+      } else {
+        const sleep = 5000
+        console.log(chalk.yellow(`Retrying GPT call in ${sleep/1000} seconds`), error.response.data)
+        retries--;
+        await new Promise(r => setTimeout(r, sleep));
       }
-      retries--;
     }
   }
 };
