@@ -13,23 +13,27 @@ async function initCodeBase(codeBaseDirectory, interactive){
     // Create directory `__CODEBASE__/.autopilot`
     codeBaseAutopilotDirectory = getCodeBaseAutopilotDirectory(codeBaseDirectory);
 
-    if (!fs.existsSync(codeBaseAutopilotDirectory)){
-        fs.mkdirSync(codeBaseAutopilotDirectory);
-    }
-
-    // Create config file `__CODEBASE__/.autopilot/config.json`
-    // TODO: Refactor include/exclude lists into codebase config file
-
-    const { getDBFilePath } = require('./db');
-    // Bootstrap DB
-    if (!fs.existsSync(getDBFilePath(codeBaseDirectory))){
-        createDB(codeBaseDirectory);
-        // Trigger codeBase indexing
-        if (interactive){
-            await codeBaseFullIndexInteractive(codeBaseDirectory, model);
-        } else {
-            await codeBaseFullIndex(codeBaseDirectory);
+    try {
+        if (!fs.existsSync(codeBaseAutopilotDirectory)){
+            fs.mkdirSync(codeBaseAutopilotDirectory);
         }
+
+        // Create config file `__CODEBASE__/.autopilot/config.json`
+        // TODO: Refactor include/exclude lists into codebase config file
+
+        const { getDBFilePath } = require('./db');
+        // Bootstrap DB
+        if (!fs.existsSync(getDBFilePath(codeBaseDirectory))){
+            createDB(codeBaseDirectory);
+            // Trigger codeBase indexing
+            if (interactive){
+                await codeBaseFullIndexInteractive(codeBaseDirectory, model);
+            } else {
+                await codeBaseFullIndex(codeBaseDirectory);
+            }
+        }
+    } catch (error) {
+        console.error('Error initializing codebase:', error);
     }
 }
 

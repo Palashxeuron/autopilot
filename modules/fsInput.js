@@ -4,8 +4,8 @@ require('dotenv').config();
 const hashFile = require('./hashing');
 const { countTokens } = require('./tokenHelper');
 
-const ignoreList = process.env.IGNORE_LIST.split(',');
-const fileExtensionsToProcess = process.env.FILE_EXTENSIONS_TO_PROCESS.split(',');
+const ignoreList = process.env.IGNORE_LIST?.split(',') ?? [];
+const fileExtensionsToProcess = process.env.FILE_EXTENSIONS_TO_PROCESS?.split(',') ?? [];
 
 /**
  * Recursively scans the directory specified by 'dir', searching for project files.
@@ -17,21 +17,26 @@ const fileExtensionsToProcess = process.env.FILE_EXTENSIONS_TO_PROCESS.split(','
  * @returns {string[]} An array of absolute file paths for all project files found.
 */
 function getFilePaths(dir) {
-	const files = fs.readdirSync(dir);
-	const projectFiles = [];
+	try {
+		const files = fs.readdirSync(dir);
+		const projectFiles = [];
 
-	for (const file of files) {
-		const filePath = path.posix.join(dir, file);
-		const stats = fs.statSync(filePath);
+		for (const file of files) {
+			const filePath = path.posix.join(dir, file);
+			const stats = fs.statSync(filePath);
 
-		if (stats.isDirectory() && !ignoreList.includes(file)) {
-			projectFiles.push(...getFilePaths(filePath));
-		} else if (fileExtensionsToProcess.includes(path.extname(filePath))) {
-			projectFiles.push(filePath);
+			if (stats.isDirectory() && !ignoreList.includes(file)) {
+				projectFiles.push(...getFilePaths(filePath));
+			} else if (fileExtensionsToProcess.includes(path.extname(filePath))) {
+				projectFiles.push(filePath);
+			}
 		}
-	}
 
-	return projectFiles;
+		return projectFiles;
+	} catch (error) {
+		console.error('Error occurred while scanning directory:', error);
+		return [];
+	}
 };
 
 
@@ -48,19 +53,24 @@ function getFilePaths(dir) {
     * fileTimestamp: The timestamp when the file was last modified.
  */
 function parseFileContent(dir, filePathFull, fileContent) {
-	const fileTokensCount = countTokens(fileContent);
-	const fileHash = hashFile(fileContent);
-	const relativePath = path.relative(dir, filePathFull).replace(/\\/g, '/');
-	const fileTimestamp = fs.statSync(filePathFull).mtimeMs; // Get the file modification timestamp
-	// TODO: cleanup file pre-fix from fields (need to match uses in other files)
-	const parseFile = {
-		filePath: relativePath,
-		fileContent: fileContent,
-		fileTokensCount: fileTokensCount,
-		fileHash: fileHash,
-		fileTimestamp: fileTimestamp,
-	};
-	return parseFile;
+	try {
+		const fileTokensCount = countTokens(fileContent);
+		const fileHash = hashFile(fileContent);
+		const relativePath = path.relative(dir, filePathFull).replace(/\\/g, '/');
+		const fileTimestamp = fs.statSync(filePathFull).mtimeMs; // Get the file modification timestamp
+		// TODO: cleanup file pre-fix from fields (need to match uses in other files)
+		const parseFile = {
+			filePath: relativePath,
+			fileContent: fileContent,
+			fileTokensCount: fileTokensCount,
+			fileHash: fileHash,
+			fileTimestamp: fileTimestamp,
+		};
+		return parseFile;
+	} catch (error) {
+		console.error('Error occurred while parsing file content:', error);
+		return null;
+	}
 }
 
 /**
@@ -76,19 +86,26 @@ function parseFileContent(dir, filePathFull, fileContent) {
  */
 function loadFiles(dir) {
 
-    const filePaths = getFilePaths(dir);
-    const files = [];
-  
-    for (const filePath of filePaths) {
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        if (!fileContent || fileContent.length == 0) {
-            continue;
-        }
-        const file = parseFileContent(dir, filePath, fileContent);
-        files.push(file);
-    }
-  
-    return files;
+	try {
+		const filePaths = getFilePaths(dir);
+		const files = [];
+
+		for (const filePath of filePaths) {
+			const fileContent = fs.readFileSync(filePath, 'utf-8');
+			if (!fileContent || fileContent.length == 0) {
+				continue;
+			}
+			const file = parseFileContent(dir, filePath, fileContent);
+			if (file) {
+				files.push(file);
+			}
+		}
+
+		return files;
+	} catch (error) {
+		console.error('Error occurred while loading files:', error);
+		return [];
+	}
 };
 
 
@@ -100,25 +117,28 @@ function loadFiles(dir) {
  * each with a path property and a code property containing the file's contents.
  */
 function getFiles(codeBaseDirectory, files){
-	let retFiles=[]
+	let retFiles=[];
 	for (const file of files) {
-	  const filePathRelative = file.path;
-	  const filePathFull = path.posix.join(codeBaseDirectory, filePathRelative); 
-		let fileContent
-		if (file.exists) {
-			fileContent = fs.readFileSync(filePathFull, 'utf8');
-		} else {
-			fileContent = "// This is a new file"
+		const filePathRelative = file.path;
+		const filePathFull = path.posix.join(codeBaseDirectory, filePathRelative);
+		let fileContent;
+		try {
+			if (file.exists) {
+				fileContent = fs.readFileSync(filePathFull, 'utf8');
+			} else {
+				fileContent = "// This is a new file";
+			}
+			file.code = fileContent;
+			retFiles.push(file);
+		} catch (error) {
+			console.error(`Error occurred while reading file: ${filePathFull}`, error);
 		}
-	  file.code = fileContent
-	  retFiles.push(file)
 	}
-	return retFiles
+	return retFiles;
 }
 
 module.exports = {
 	loadFiles,
 	parseFileContent,
 	getFiles,
-}
-
+};

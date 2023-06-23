@@ -6,6 +6,10 @@ const crypto = require('crypto');
  * @returns {string} - The hash value for the specified file content.
 */
 function hashFile(fileContentInput){
+    if (typeof fileContentInput !== 'string') {
+        throw new Error('Invalid file content input. Expected a string.');
+    }
+
     const fileContent = fileContentInput.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
     const hash = crypto.createHash('sha256').update(fileContent).digest('hex');

@@ -1,3 +1,5 @@
+const { codeBaseFullIndexInteractive } = require('./codeBase');
+const { codeBaseFullIndex } = require('./codeBase');
 
 /**
  * Asynchronously reindexes the codebase located at the specified directory, using the specified model for indexing.
@@ -8,10 +10,8 @@
  */
 async function reindexCodeBase(codeBaseDirectory, model, interactive) {
   if (interactive) {
-    const { codeBaseFullIndexInteractive } = require('./codeBase');
     await codeBaseFullIndexInteractive(codeBaseDirectory, model);
   } else {
-    const { codeBaseFullIndex } = require('./codeBase');
     await codeBaseFullIndex(codeBaseDirectory, model);
   }
 }
